@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="my" class="h-full">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vaseline Cosmetics Shop</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+</head>
+<body class="bg-slate-50 text-slate-800 h-full flex flex-col font-sans">
+
+    <!-- Header -->
+    <header class="bg-blue-900 text-white shadow-md sticky top-0 z-50 px-4 py-3 flex justify-between items-center">
+        <div class="flex items-center space-x-2">
+            <div class="bg-blue-600 p-2 rounded-full text-white">
+                <i class="fa-solid fa-pump-soap text-lg"></i>
+            </div>
+            <div>
+                <h1 class="font-bold text-base">Vaseline Official Shop</h1>
+                <p class="text-xs text-blue-200" id="user-greeting">ကြိုဆိုပါတယ် မိတ်ဆွေ</p>
+            </div>
+        </div>
+        <div>
+            <button onclick="openCart()" class="relative bg-blue-800 hover:bg-blue-700 p-2 rounded-xl text-white transition">
+                <i class="fa-solid fa-bag-shopping text-xl"></i>
+                <span id="cart-badge" class="absolute -top-1 -right-1 bg-pink-500 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">0</span>
+            </button>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="flex-1 overflow-y-auto p-4 max-w-4xl mx-auto w-full pb-24">
+        <!-- Banner / Points Card -->
+        <div class="bg-gradient-to-r from-pink-500 to-rose-500 text-white rounded-2xl p-4 shadow-lg mb-6 flex justify-between items-center">
+            <div>
+                <span class="bg-white/20 text-[10px] px-2 py-0.5 rounded-full font-medium">Rewards Program</span>
+                <h2 class="text-base font-bold mt-1">ဝယ်ယူမှုတိုင်းအတွက် Points ရယူပါ</h2>
+                <p class="text-[11px] text-pink-100 mt-0.5">30,000 ကျပ် ဖိုး ဝယ်ယူတိုင်း Points များ စုဆောင်းနိုင်ပါပြီ။</p>
+            </div>
+            <div class="bg-white/10 backdrop-blur-md px-3 py-2 rounded-xl border border-white/20 text-center">
+                <span class="block text-[10px] text-pink-100">Points</span>
+                <span id="user-points" class="text-xl font-black">0</span>
+            </div>
+        </div>
+
+        <div class="flex justify-between items-center mb-3">
+            <h3 class="font-bold text-sm text-slate-700">Vaseline Products များ</h3>
+            <span class="text-xs text-slate-500">တစ်ဘူး - 30,000 Ks</span>
+        </div>
+
+        <div id="product-grid" class="grid grid-cols-2 gap-3">
+            <!-- Products rendered by JS -->
+        </div>
+    </main>
+
+    <!-- Cart Modal -->
+    <div id="cart-modal" class="fixed inset-0 bg-black/50 z-50 hidden flex justify-end">
+        <div class="bg-white w-full max-w-sm h-full flex flex-col shadow-2xl">
+            <div class="p-4 bg-blue-900 text-white flex justify-between items-center">
+                <h3 class="font-bold text-base"><i class="fa-solid fa-bag-shopping mr-2"></i> ဈေးဝယ်တောင်း</h3>
+                <button onclick="closeCart()" class="text-white"><i class="fa-solid fa-xmark text-lg"></i></button>
+            </div>
+            <div id="cart-items" class="flex-1 overflow-y-auto p-4 divide-y divide-slate-100">
+                <!-- Cart list -->
+            </div>
+            <div class="p-4 border-t border-slate-200 bg-slate-50">
+                <div class="flex justify-between mb-2 text-xs">
+                    <span class="text-slate-600">စုစုပေါင်း အရေအတွက်:</span>
+                    <span id="cart-total-qty" class="font-bold">0</span>
+                </div>
+                <div class="flex justify-between mb-4 text-sm">
+                    <span class="font-bold text-slate-800">ကျသင့်ငွေ စုစုပေါင်း:</span>
+                    <span id="cart-total-price" class="font-bold text-blue-600">0 Ks</span>
+                </div>
+                <button onclick="checkout()" class="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-xl font-bold shadow-md transition flex items-center justify-center space-x-2 text-sm">
+                    <i class="fa-brands fa-telegram text-base"></i>
+                    <span>Telegram ဖြင့် အော်ဒါတင်မည်</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast -->
+    <div id="toast" class="fixed bottom-5 left-1/2 transform -translate-x-1/2 bg-slate-900 text-white px-4 py-2 rounded-full text-xs shadow-lg opacity-0 pointer-events-none transition-opacity z-50">
+        Notification
+    </div>
+
+    <script>
+        let tg = window.Telegram?.WebApp;
+        if (tg) { tg.expand(); }
+
+        const userTelegramName = tg?.initDataUnsafe?.user?.first_name || "မိတ်ဆွေ";
+        document.getElementById('user-greeting').innerText = `မင်္ဂလာပါ, ${userTelegramName}`;
+
+        const products = [
+            { id: 1, name: 'Vaseline Gluta-Hya Dewy Radiance', price: 30000, points: 300, image: 'https://i.ibb.co/3s68K1K/1000010632.jpg' },
+            { id: 2, name: 'Vaseline Gluta-Hya PDRN', price: 30000, points: 300, image: 'https://i.ibb.co/6y40H5P/1000010629.jpg' },
+            { id: 3, name: 'Vaseline Gluta-Hya Pro-Age Restore', price: 30000, points: 300, image: 'https://i.ibb.co/K2C2m1G/1000010628.jpg' },
+            { id: 4, name: 'Vaseline Gluta-Hya Overnight Radiance', price: 30000, points: 300, image: 'https://i.ibb.co/0V18R3Z/1000010627.jpg' },
+            { id: 5, name: 'Vaseline Gluta-Hya Smoothing Perfector', price: 30000, points: 300, image: 'https://i.ibb.co/2k9g9XJ/1000010626.jpg' },
+            { id: 6, name: 'Vaseline Fresh & Bright Cooling', price: 30000, points: 300, image: 'https://i.ibb.co/7X8g2Qz/1000010576.png' },
+            { id: 7, name: 'Vaseline Calming Lavender', price: 30000, points: 300, image: 'https://i.ibb.co/5XZ5G6f/1000010578.png' },
+            { id: 8, name: 'Vaseline Daily Brightening', price: 30000, points: 300, image: 'https://i.ibb.co/2W7Z1Q7/1000010581.png' },
+            { id: 9, name: 'Vaseline Advanced Repair', price: 30000, points: 300, image: 'https://i.ibb.co/8K9Z1Q7/1000010579.png' },
+            { id: 10, name: 'Vaseline Sun + Pollution Protection', price: 30000, points: 300, image: 'https://i.ibb.co/9K9Z1Q7/1000010580.png' }
+        ];
+
+        let cart = [];
+        let totalPoints = 0;
+
+        function renderProducts() {
+            const grid = document.getElementById('product-grid');
+            grid.innerHTML = products.map(p => `
+                <div class="bg-white rounded-xl shadow-sm border border-slate-100 overflow-hidden flex flex-col justify-between p-2">
+                    <div class="h-32 flex items-center justify-center bg-slate-50 rounded-lg p-1">
+                        <img src="${p.image}" alt="${p.name}" class="h-full object-contain" onerror="this.src='https://via.placeholder.com/150?text=Vaseline'">
+                    </div>
+                    <div class="mt-2 flex-1 flex flex-col justify-between">
+                        <div>
+                            <h4 class="text-[11px] font-bold text-slate-700 line-clamp-2">${p.name}</h4>
+                            <div class="text-blue-600 font-black text-xs mt-1">${p.price.toLocaleString()} Ks</div>
+                            <div class="text-[9px] text-pink-500 font-medium">+${p.points} Points</div>
+                        </div>
+                        <button onclick="addToCart(${p.id})" class="mt-2 w-full bg-blue-50 hover:bg-blue-600 hover:text-white text-blue-600 py-1.5 rounded-lg text-xs font-bold transition">
+                            <i class="fa-solid fa-cart-plus mr-1"></i>ထည့်မည်
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function addToCart(id) {
+            const product = products.find(p => p.id === id);
+            const existing = cart.find(i => i.id === id);
+            if (existing) { existing.qty += 1; } else { cart.push({ ...product, qty: 1 }); }
+            updateCartUI();
+            showToast('ပစ္စည်းထည့်ပြီးပါပြီ');
+        }
+
+        function updateCartUI() {
+            document.getElementById('cart-badge').innerText = cart.reduce((sum, i) => sum + i.qty, 0);
+            const container = document.getElementById('cart-items');
+            if (cart.length === 0) {
+                container.innerHTML = `<div class="text-center text-slate-400 py-10 text-xs">ဈေးဝယ်တောင်းထဲတွင် ပစ္စည်းမရှိပါ။</div>`;
+            } else {
+                container.innerHTML = cart.map(item => `
+                    <div class="py-2 flex justify-between items-center">
+                        <div class="flex items-center space-x-2">
+                            <img src="${item.image}" class="w-8 h-8 object-contain">
+                            <div>
+                                <h5 class="text-[11px] font-bold text-slate-700">${item.name}</h5>
+                                <span class="text-[10px] text-slate-500">${item.price.toLocaleString()} x ${item.qty}</span>
+                            </div>
+                        </div>
+                        <div class="flex items-center space-x-1">
+                            <button onclick="changeQty(${item.id}, -1)" class="w-5 h-5 bg-slate-100 rounded text-xs font-bold">-</button>
+                            <span class="text-xs font-bold px-1">${item.qty}</span>
+                            <button onclick="changeQty(${item.id}, 1)" class="w-5 h-5 bg-slate-100 rounded text-xs font-bold">+</button>
+                        </div>
+                    </div>
+                `).join('');
+            }
+            const totalPrice = cart.reduce((sum, i) => sum + (i.price * i.qty), 0);
+            totalPoints = cart.reduce((sum, i) => sum + (i.points * i.qty), 0);
+            document.getElementById('cart-total-qty').innerText = cart.reduce((sum, i) => sum + i.qty, 0);
+            document.getElementById('cart-total-price').innerText = totalPrice.toLocaleString() + ' Ks';
+            document.getElementById('user-points').innerText = totalPoints;
+        }
+
+        function changeQty(id, delta) {
+            const item = cart.find(i => i.id === id);
+            if (item) {
+                item.qty += delta;
+                if (item.qty <= 0) { cart = cart.filter(i => i.id !== id); }
+            }
+            updateCartUI();
+        }
+
+        function openCart() { document.getElementById('cart-modal').classList.remove('hidden'); }
+        function closeCart() { document.getElementById('cart-modal').classList.add('hidden'); }
+
+        function showToast(msg) {
+            const t = document.getElementById('toast');
+            t.innerText = msg;
+            t.classList.remove('opacity-0');
+            setTimeout(() => t.classList.add('opacity-0'), 2000);
+        }
+
+        function checkout() {
+            if (cart.length === 0) { showToast('ပစ္စည်းများ ရွေးချယ်ပါ'); return; }
+            let text = "🛍️ *Vaseline Shop Order*%0A";
+            let total = 0;
+            cart.forEach((i, idx) => {
+                text += `${idx + 1}. ${i.name} x ${i.qty} = ${(i.price * i.qty).toLocaleString()} Ks%0A`;
+                total += i.price * i.qty;
+            });
+            text += `%0A💰 *စုစုပေါင်း:* ${total.toLocaleString()} Ks%0A🎁 *ရရှိမည့် Points:* ${totalPoints}`;
+            
+            if (tg && tg.sendData) {
+                tg.sendData(text);
+                tg.close();
+            } else {
+                alert("Telegram Bot သို့ ပေးပို့ပြီးပါပြီ။ Points: " + totalPoints);
+                cart = [];
+                updateCartUI();
+                closeCart();
+            }
+        }
+
+        renderProducts();
+    </script>
+</body>
+</html>
+
